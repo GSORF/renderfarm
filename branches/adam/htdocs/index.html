@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html xml:lang="en" lang="en">
+<head>
+
+	<title>GSORF: Georg Simon Ohm Renderfarm</title>
+	
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Free, easy to install renderfarm for blender 3d.">
+	<link rel="icon" href="images/ohm_favicon.png" type="image/png">
+
+	<!--
+	<link media="all" href="css/widgetbig060.css" type="text/css" rel="stylesheet">
+	<link media="all" href="css/widget120.css" type="text/css" rel="stylesheet">
+
+	<link href="css/base-min.css" rel="stylesheet">
+	<link href="css/gsorf.css" rel="stylesheet">
+	<link href="css/overlay.css" rel="stylesheet">
+	<link href="css/scroll.css" rel="stylesheet">
+	<link href="css/fontello.css" rel="stylesheet">
+
+	<link rel="stylesheet" href="css/gsorf_002.css" type="text/css" media="screen">
+	<link rel="stylesheet" href="css/css.css" type="text/css"> -->
+	
+	
+	<style>
+	html
+	{
+		font-size: 62.5%;
+		font-family: sans-serif;
+	}
+	body
+	{
+		background-color: #0053a1;
+		color: #bcbcbc;
+		font-family: 'Open Sans',Helvetica,Arial,sans-serif;
+		font-size: 14px;
+		line-height: 1.5;
+		margin: 0;
+	}
+	
+	.navbar:before, .navbar:after {
+		content: " ";
+		display: table;
+	}
+	.navbar:after {
+		clear: both;
+	}
+	.navbar:before, .navbar:after {
+		content: " ";
+		display: table;
+	}
+	#header {
+		background: none repeat scroll 0 0 #fafafa;
+		color: #fff;
+		height: 60px;
+		left: 0;
+		position: absolute;
+		text-align: left;
+		width: 100%;
+		z-index: 3;
+	}
+	.navbar {
+		border-bottom: 0 none;
+		margin-bottom: 0;
+		min-height: 44px;
+		overflow: visible;
+	}
+	
+	.clearfix:before, .clearfix:after {
+		content: " ";
+		display: table;
+	}
+	.clearfix:after {
+		clear: both;
+	}
+	.clearfix:before, .clearfix:after {
+		content: " ";
+		display: table;
+	}
+	.navbar .container {
+		float: none !important;
+	}
+	.container {
+		max-width: 960px;
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+	.clearfix {
+	}
+	.navbar > *, .navbar .container > * {
+		float: left;
+	}
+	.container {
+		margin: 0 auto;
+		max-width: 960px;
+		position: relative;
+	}
+		#logo {
+    line-height: 1;
+    margin: 21px 16px 0 0;
+    padding: 0;
+}
+.navbar > *, .navbar .container > * {
+    float: left;
+}
+.navbar a {
+    color: #777;
+    text-shadow: none;
+}
+a {
+    outline: 0 none;
+    text-decoration: none;
+}
+	img {
+    border: 0 none;
+    display: inline-block;
+    height: auto;
+    vertical-align: middle;
+}
+#header .nav.menu {
+    float: right;
+    margin-right: 15px;
+}
+ul {
+    padding: 0;
+}
+.navbar .menu li, .menu.horizontal li {
+    display: inline-block;
+    vertical-align: middle;
+}
+.menu li {
+    line-height: 20px;
+    list-style: none outside none;
+    position: relative;
+    z-index: 1;
+}
+
+.navbar .current a {
+    color: #111;
+    font-weight: bold;
+	text-decoration: none ;
+}
+.navbar a {
+    padding: 20px 14px;
+    text-shadow: none;
+	
+}
+.menu a, .menu span {
+    display: block;
+    text-decoration: none;
+    white-space: nowrap;
+}
+a {
+    outline: 0 none;
+}
+.navbar a {
+    color: #777;
+    padding: 20px 10px;
+    text-shadow: none;
+}
+.menu a, .menu span {
+    display: block;
+	text-decoration: line-through;
+    white-space: nowrap;
+}
+a {
+    outline: 0 none;
+}
+#title {
+    margin-bottom: 40px;
+    text-align: center;
+}
+#title {
+    background: url("images/bg-gsorf.png") no-repeat scroll center bottom #fff;
+    padding: 100px 0 150px;
+}
+.container {
+    max-width: 960px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.container {
+    margin: 0 auto;
+    position: relative;
+}
+#title h1 {
+    margin: 50px 20px 0;
+    text-align: center;
+}
+h1 {
+    font-size: 40px;
+}
+h1, h2, h3, h4 {
+    color: #81b6db;
+    letter-spacing: -0.05em;
+    line-height: 1.1em;
+    text-rendering: optimizelegibility;
+}
+#title p {
+    color: #666;
+    font-size: 18px;
+    font-weight: normal;
+    line-height: 27px;
+    margin: 15px 0 30px;
+}
+#title {
+    text-align: center;
+}
+#title .btn {
+    font-size: 18px;
+    margin-bottom: 7px;
+}
+.btn-success {
+    background: none repeat scroll 0 0 #40bd4f;
+    color: #fff;
+}
+.btn {
+    -moz-user-select: none;
+    border: 1px solid rgba(0, 0, 0, 0);
+    border-radius: 2px;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: 600;
+    padding: 0.5em 1.5em;
+    text-align: center;
+    text-decoration: none;
+    transition: box-shadow 0.1s linear 0s;
+    vertical-align: baseline;
+    white-space: nowrap;
+}
+a {
+    outline: 0 none;
+}
+#title small {
+    color: #999;
+    display: block;
+    font-size: 0.9em;
+}
+small {
+    font-size: 80%;
+}
+#title small a {
+    background: url("images/icons-os-3.gif") no-repeat scroll center top rgba(0, 0, 0, 0);
+    display: inline-block;
+    height: 26px;
+    margin-top: 3px;
+    opacity: 0.9;
+    padding-left: 3px;
+    text-indent: -9999px;
+    width: 153px;
+}
+a {
+    color: #ff7700;
+    outline: 0 none;
+    text-decoration: none;
+}
+.container {
+    max-width: 960px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.container {
+    margin: 0 auto;
+    position: relative;
+}
+#features {
+    margin-bottom: 50px;
+    margin-top: 50px;
+    overflow: hidden;
+	color: #8cd0ff ;
+}
+.clearfix:before, .clearfix:after {
+    content: " ";
+    display: table;
+}
+.clearfix:after {
+    clear: both;
+}
+.clearfix:before, .clearfix:after {
+    content: " ";
+    display: table;
+}
+.cbp-so-section {
+    margin-bottom: 3em;
+}
+.clearfix {
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
+    display: block;
+}
+#mentions {
+    background: none repeat scroll 0 0 #0274c7;
+    padding: 50px 0 40px;
+    text-align: center;
+}
+.container {
+    max-width: 960px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.container {
+    margin: 0 auto;
+    max-width: 960px;
+    position: relative;
+}
+#mentions img.top {
+    margin: 0 20px 10px 0;
+}
+.responsive img {
+    max-width: 100%;
+}
+img {
+    border: 0 none;
+    display: inline-block;
+    height: auto;
+    vertical-align: middle;
+}
+#footer {
+    background: none repeat scroll 0 0 #006bb9;
+    padding-bottom: 30px;
+}
+.container {
+    max-width: 960px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.container {
+    margin: 0 auto;
+    position: relative;
+}
+.right {
+    clear: right;
+    float: right !important;
+}
+ul {
+    margin: 0;
+    padding: 0;
+}
+
+.navbar .menu li, .menu.horizontal li {
+    display: inline-block;
+    vertical-align: middle;
+}
+.menu li {
+    line-height: 20px;
+    list-style: none outside none;
+    position: relative;
+    z-index: 1;
+}
+.left {
+    clear: left;
+    float: left !important;
+    list-style: none outside none;
+}
+#social {
+    display: inline-block;
+    float: right;
+}
+.addthis_default_style .at300b, .addthis_default_style .at300bo, .addthis_default_style .at300m {
+    padding: 0 2px;
+}
+.addthis_default_style .addthis_separator, .addthis_default_style .at300b, .addthis_default_style .at300bo, .addthis_default_style .at300m, .addthis_default_style .at300bs {
+    float: left;
+}
+.at300b, .at300bo, .at300m, .at300bs {
+    cursor: pointer;
+}
+a {
+    color: #ff7700;
+    outline: 0 none;
+    text-decoration: none;
+}
+.addthis_32x32_style .at15nc.at15t_facebook {
+    background-position: 0 -2592px !important;
+}
+.addthis_32x32_style .at15nc.at300bs, .addthis_32x32_style .at15nc.at15t {
+    background: url("images/widget060_32x32.png") no-repeat scroll 0 0 rgba(0, 0, 0, 0) !important;
+}
+.addthis_toolbox.addthis_32x32_style span {
+    line-height: 32px;
+}
+.addthis_32x32_style .at15t_facebook {
+    background-position: 0 -160px !important;
+}
+.addthis_32x32_style .dummy .at300bs, .addthis_32x32_style .at300bs, .addthis_32x32_style .at15t {
+    background: url("images/widget016_32x32_top.gif") no-repeat scroll left center rgba(0, 0, 0, 0);
+    display: block;
+    height: 32px !important;
+    line-height: 32px !important;
+    overflow: hidden;
+    width: 32px !important;
+}
+.addthis_default_style .addthis_separator, .addthis_default_style .at300b, .addthis_default_style .at300bo, .addthis_default_style .at300m, .addthis_default_style .at300bs {
+    float: left;
+}
+.at15t_facebook {
+    background-position: 0 -1296px;
+}
+.at300bs {
+    background: url("images/widget060.gif") no-repeat scroll 0 0 rgba(0, 0, 0, 0);
+    display: block;
+    height: 16px;
+    line-height: 16px !important;
+    overflow: hidden;
+    width: 16px;
+}
+.at300b, .at300bo, .at300m, .at300bs {
+    cursor: pointer;
+}
+.addthis_toolbox.addthis_32x32_style span {
+    line-height: 32px;
+}
+.at_a11y {
+    height: 1px !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: auto !important;
+    width: 1px !important;
+}
+.cbp-so-section.cbp-so-animate .cbp-so-side-left, .cbp-so-section.cbp-so-animate .cbp-so-side-right {
+    opacity: 1;
+    transform: translateX(0px);
+}
+.cbp-so-init .cbp-so-side-left {
+    transform: translateX(-80px);
+}
+.cbp-so-init .cbp-so-side {
+    opacity: 0;
+}
+.cbp-so-side-left {
+    text-align: right;
+}
+.cbp-so-side {
+    float: left;
+    margin: 0;
+    min-height: 12em;
+    overflow: hidden;
+    transition: transform 0.5s ease 0s, opacity 0.5s ease 0s;
+    width: 50%;
+}
+figure {
+    margin: 0;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
+    display: block;
+}
+#features img {
+    float: left;
+    margin: 0 10px 10px 0;
+}
+.cbp-so-side img {
+    max-width: 100%;
+    text-align: center;
+}
+img {
+    border: 0 none;
+    display: inline-block;
+    height: auto;
+    vertical-align: middle;
+}
+img {
+    border: 0 none;
+}
+#mentions img.top {
+    margin: 0 20px 10px 0;
+}
+.responsive img {
+    max-width: 100%;
+}
+img {
+    border: 0 none;
+    display: inline-block;
+    height: auto;
+    vertical-align: middle;
+}
+img {
+    border: 0 none;
+}
+#mentions img.bottom {
+    margin: 0 0 10px;
+}
+.responsive img {
+    max-width: 100%;
+}
+img {
+    border: 0 none;
+    display: inline-block;
+    height: auto;
+    vertical-align: middle;
+}
+img {
+    border: 0 none;
+}
+.addthis_toolbox.addthis_32x32_style span {
+    line-height: 32px;
+}
+.at_a11y {
+    height: 1px !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: auto !important;
+    width: 1px !important;
+}
+
+
+#render_thumbnail
+{
+	min-width: 300px ;
+	min-height: 100px ;
+	max-width: 600px ;
+	max-height: 600px ;
+	
+}
+
+
+
+
+
+
+	</style>
+	
+</head>
+
+<body id="home">
+
+  <div class="navbar" id="header">
+    <div class="container clearfix">
+
+      <a id="logo" title="GSORF" href="index.html">
+	  <img src="images/gsorf-105.png" alt="GSORF">
+	  </a>
+
+      <ul class="nav menu hidden-phone">
+        <li class="menu-home current"><a>Status (current Job)</a></li>
+        <li class="menu-download"><a>Status (all Jobs)</a></li>
+        <li class="menu-plans"><a>Upload a new Job</a></li>
+        <li class="menu-faq"><a>Network overview</a></li>
+        <li class="menu-blog"><a href="http://schorsch.efi.fh-nuernberg.de/blenderfarm/">Wiki</a></li>
+      </ul>
+
+    </div>
+  </div>
+
+<div id="title">
+<div id="call-to-action">
+      <a class="download btn btn-success" href="javascript:location.reload(true);">Refresh this page</a>
+    </div>
+  <div class="container">
+    <h1>Current Job: {JOB_NAME}.</h1>
+
+    <p id="desc">
+		
+		<p>
+		<img src="{CURRENT_RENDER_THUMBNAIL}" id="render_thumbnail"></img>
+		</p>
+		
+		<p>
+		Current Rendertime: {CURRENT_RENDER_TIME}<br />
+		Remaining Rendertime: {REMAINING_RENDER_TIME}<br />
+		Frames rendered: {FRAMES_RENDERED} / {TOTAL_FRAMES}<br />
+		Current Server Time: {TIME}<br />
+		</p>
+	</p>
+
+    
+
+  </div>
+
+  <i class="down icon-angle-down"></i>
+</div><!-- /title -->
+
+<div id="content" class="container">
+
+<div id="features">
+
+  		<center>
+		<video width="640" height="360" controls>
+			<source src="movie/gsorf_movie.mp4" type="video/mp4">
+			Your browser does not support the video tag.
+		</video>
+		</center>
+
+</div><!-- /features -->
+</div><!-- /content -->
+
+<!--
+  <p><big class="highlighted message"><a href="/plans">Pro plans have arrived!</a> Upgrade now and unlock new features<br />and the ability to track large numbers of devices.</big></p>
+-->
+
+
+<div id="footer" class="clearfix">
+  <div class="container">
+
+    <ul class="horizontal hidden-phone right">
+      <li class="left"><span style="padding-right: 0">© 2014 — Gsorf, a product by
+      <a class="inline" style="display: inline; padding: 0" target="_blank" href="http://www.ohm-hochschule.de/">Technische Hochschule Nürnberg Georg Simon Ohm</a>.</span>
+	  </li>
+    </ul>
+
+	<div class="container">
+    <p>License: <a href="http://www.gnu.org/licenses/gpl-3.0.txt" target="_blank">GNU GENERAL PUBLIC LICENSE Version 3</a></p>
+	</div>
+
+      <div id="social">
+
+      <!-- AddThis Button BEGIN -->
+      <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+        <a title="Follow on Facebook" target="_blank" href="http://www.facebook.com" class="addthis_button_facebook_follow at300b">Facebook</a>
+        <a href="#" title="Email" target="_blank" class="addthis_button_email at300b">Share on email</a>
+      <div class="atclear"></div>
+	  </div>
+
+    </div>
+
+
+    <!-- AddThis Button END -->
+
+  </div>
+</div><!-- /footer -->
+
+</body>
+</html>
