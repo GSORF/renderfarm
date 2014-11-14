@@ -34,7 +34,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <QThread>
 #include <QFileDialog>
 #include <QListWidgetItem>
+#if (QT_VERSION < 0x050000)
+#include <QWebView>
+#else 
 #include <QtWebKitWidgets/QWebView>
+#endif
 #include <QUrl>
 #include "taskhandler.h"
 #include "client.h"
