@@ -20,7 +20,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>Georg Simon Ohm Renderfarm (GSORF) 1.0 ALPHA</string>
+   <string>Georg Simon Ohm Renderfarm (GSORF) 1.1 ALPHA</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
@@ -1953,8 +1953,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupBlenderInstallation"/>
-  <buttongroup name="btnGroupCPUorGPU"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="btnGroupCPUorGPU"/>
+  <buttongroup name="btnGroupBlenderInstallation"/>
  </buttongroups>
 </ui>
