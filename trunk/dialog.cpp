@@ -26,7 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 QDebug operator<<(QDebug dbg, const RenderNode::Node &node)
 {
-     dbg << node.IP << "(cached=" << node.cached << ", icon=" << node.icon << ")";
+     dbg << node.IP << "(cached=" << node.cached << ", busy=" << node.busy << ", icon=" << node.icon << ")";
      return dbg;
 }
 
@@ -78,8 +78,10 @@ Dialog::Dialog(QWidget *parent) :
     tcpSendPort=6667;
     tcpRecievePort=6682;
     milliSecInMin=60000;
-    timVar=2500;
     numRenderNodes = 0;
+
+    PayloadSize = ui->sb_payloadsize->value();
+    timVar = ui->sb_udp->value();
 
     generateRandomGSORFServerPriority();
 
@@ -94,9 +96,13 @@ Dialog::Dialog(QWidget *parent) :
     connect( ui->btn_nuke, SIGNAL( clicked() ), this, SLOT(onBtnClickedNuke()),Qt::QueuedConnection );
     connect( ui->btn_expertmode, SIGNAL(clicked() ), this, SLOT(onBtnExpertMode()),Qt::QueuedConnection);
     connect( ui->btn_simplemode, SIGNAL(clicked() ), this, SLOT(onBtnSimpleMode()),Qt::QueuedConnection);
+    connect( ui->btn_setOptions, SIGNAL(clicked() ), this, SLOT(onSetOptions_btn()),Qt::QueuedConnection);
+
+
 
     connect( ui->sb_start, SIGNAL(valueChanged(int)), this, SLOT(spinboxStart(int)),Qt::QueuedConnection);
     connect( ui->sb_end, SIGNAL(valueChanged(int)), this, SLOT(spinboxEnd(int)),Qt::QueuedConnection);
+
     myQtTimer = new QTimer(this);
     //connect( myQtTimer,SIGNAL(timeout()),this, SLOT(callAvailableWorkersPediodicly()),Qt::QueuedConnection); //associate timer to function
     //myQtTimer->setInterval(6050);
@@ -449,14 +455,20 @@ QListWidgetItem *Dialog::createRenderNodeEntry(RenderNode::Node renderNode)
 {
     QString _entry = "";
     _entry += renderNode.IP;
+    _entry += " (";
     if(renderNode.cached)
-        _entry += " (cached, ";
+        _entry += "cached, ";
     else
-        _entry += " (not cached, ";
+        _entry += "not cached, ";
+    if(renderNode.busy)
+        _entry += "busy, ";
+    else
+        _entry += "idle, ";
     if(renderNode.online)
-        _entry += "online)";
+        _entry += "online";
     else
-        _entry += "offline)";
+        _entry += "offline";
+    _entry += ")";
 
     QListWidgetItem *newEntry = new QListWidgetItem();
     if(renderNode.icon == RenderNode::CPU)
@@ -468,13 +480,16 @@ QListWidgetItem *Dialog::createRenderNodeEntry(RenderNode::Node renderNode)
         newEntry->setIcon( QIcon("assets/gpu_icon.png") );
     }
     newEntry->setText(_entry);
-    if(renderNode.online)
+    if(!renderNode.busy)
     {
-        newEntry->setTextColor( Qt::darkGreen );
+        if(renderNode.online)
+            newEntry->setTextColor( Qt::darkGreen );
+        else
+            newEntry->setTextColor( Qt::red );
     }
     else
     {
-        newEntry->setTextColor( Qt::red );
+        newEntry->setTextColor( Qt::gray );
     }
     return newEntry;
 
@@ -639,6 +654,9 @@ void Dialog::onBtnExpertMode()
     ui->txtConsole->show();
     ui->btn_expertmode->hide();
     ui->btn_simplemode->show();
+    ui->btn_setOptions->show();
+    ui->sb_payloadsize->show();
+    ui->sb_udp->show();
 }
 
 
@@ -681,6 +699,7 @@ void Dialog::render_btn_clicked() // here we put the dropped file & file info in
         }
         ui->txtConsole->appendPlainText("file in queue");
     }
+
     //----------------   cleaning up   ---------------------------------
     ui->sb_start->setValue(0);
     ui->sb_end->setValue(0);
@@ -688,6 +707,20 @@ void Dialog::render_btn_clicked() // here we put the dropped file & file info in
     dropped_file.close();
     ui->lbl_filename->setText("<insert file>");
 }
+
+
+
+void Dialog::onSetOptions_btn()
+{
+    this->timVar=ui->sb_udp->value();
+    myJobHubTimer->setInterval(this->timVar);
+    this->PayloadSize=ui->sb_payloadsize->value();
+    serverMsgLogger( "timVar set to: " + QString::number( this->timVar ) + "; PayloadSize set to: " + QString::number( this->PayloadSize ) );
+
+}
+
+
+
 
 void Dialog::onBtnClickedNuke()
 {
@@ -802,13 +835,44 @@ void Dialog::processPendingDatagrams()
         //reading response from workers
         if (tempString.endsWith("1"))
         {
+            //cpu
             QStringList listC = tempString.split("%");
             emit udpConnectionCPUImpulse(listC.first());
         }
         else if (tempString.endsWith("2"))
         {
+            //gpu
             QStringList listG = tempString.split("%");
             emit udpConnectionGPUImpulse(listG.first());
+        }
+        else if (tempString.endsWith("0"))
+        {
+            //busy
+            QStringList listBusy = tempString.split("%");
+            qDebug() << "new busy render node " << listBusy.first();
+
+            for( int i=0; i<listClientIPBusy.count(); i++ )
+            {
+                if(listClientIPBusy.at(i).IP == listBusy.first())
+                {
+                    listClientIPBusy[i].timeLast = QDateTime::currentMSecsSinceEpoch();
+                    return;
+                }
+            }
+            qDebug() << "queuing Busy " << listBusy.first();
+
+            RenderNode::Node newBusyNode;
+            newBusyNode.IP = listBusy.first();
+            //newBusyNode.icon = RenderNode::Icon::CPU; //TODO: If there is time - design a new Icon for Busy Nodes
+            newBusyNode.busy = true;
+            newBusyNode.cached = false;
+            newBusyNode.timeLast = newBusyNode.timeStart = QDateTime::currentMSecsSinceEpoch();
+            listClientIPBusy.enqueue(newBusyNode);
+
+
+
+
+
         }
 
         //If something changed (a new computer joined/removed) - refresh IP Lists:
@@ -855,7 +919,6 @@ void Dialog::processPendingDatagrams()
 void Dialog::cpuTaskDetails(QString cpuDetails)
 {
     qDebug() << "new CPU Detail " << cpuDetails;
-    qDebug() << "IP's (CPU): " << listClientIpCPU;
 
     for( int i=0; i<listClientIpCPU.count(); i++ )
     {
@@ -870,6 +933,7 @@ void Dialog::cpuTaskDetails(QString cpuDetails)
     RenderNode::Node newCPUNode;
     newCPUNode.IP = cpuDetails;
     newCPUNode.icon = RenderNode::CPU;
+    newCPUNode.busy = false;
     newCPUNode.cached = false;
     newCPUNode.timeLast = newCPUNode.timeStart = QDateTime::currentMSecsSinceEpoch();
     listClientIpCPU.enqueue(newCPUNode);
@@ -878,7 +942,6 @@ void Dialog::cpuTaskDetails(QString cpuDetails)
 void Dialog::gpuTaskDetails(QString gpuDetails)
 {
     qDebug() << "new GPU Detail " << gpuDetails;
-    qDebug() << "IP's (GPU): " << listClientIpGPU;
 
     for( int i=0; i<listClientIpGPU.count(); i++ )
     {
@@ -893,6 +956,7 @@ void Dialog::gpuTaskDetails(QString gpuDetails)
     RenderNode::Node newGPUNode;
     newGPUNode.IP = gpuDetails;
     newGPUNode.icon = RenderNode::GPU;
+    newGPUNode.busy = false;
     newGPUNode.cached = false;
     newGPUNode.timeLast = newGPUNode.timeStart = QDateTime::currentMSecsSinceEpoch();
     listClientIpGPU.enqueue(newGPUNode);
@@ -914,7 +978,7 @@ void Dialog::theJobHub(){ //work in progress
 
         Task_Server taskInstance;              //create a one frame task
 
-        taskInstance.initTask(myTaskHandler.getCpuFirst().stcFileName, myTaskHandler.getCpuFirst().stcStart, myTaskHandler.getCpuFirst().stcTotalFrames, myTaskHandler.getCpuFirst().stcRender, myTaskHandler.getCpuFirst().stcCPU, myTaskHandler.getCpuFirst().stcStereo3D,line, myTaskHandler.getCpuFirst().jobId, listClientIpCPU.first().cached);
+        taskInstance.initTask(myTaskHandler.getCpuFirst().stcFileName, myTaskHandler.getCpuFirst().stcStart, myTaskHandler.getCpuFirst().stcTotalFrames, myTaskHandler.getCpuFirst().stcRender, myTaskHandler.getCpuFirst().stcCPU, myTaskHandler.getCpuFirst().stcStereo3D,line, myTaskHandler.getCpuFirst().jobId, listClientIpCPU.first().cached, this->PayloadSize);
 
         connect(&taskInstance, SIGNAL(sendProgress(int)),ui->pb_sendFile, SLOT(setValue(int)));
         connect(&taskInstance,SIGNAL(sendJobSent(QString)), this ,SLOT (getConnectionFeedback(QString)),Qt::QueuedConnection);
@@ -922,8 +986,10 @@ void Dialog::theJobHub(){ //work in progress
         unsigned int port = 6667;
         if(listClientIpCPU.first().online)
         {
-                    taskInstance.sendTo(listClientIpCPU.first().IP,port);
-                    numRenderNodes++;
+            taskInstance.sendTo(listClientIpCPU.first().IP,port);
+            numRenderNodes++;
+            QString msg= "Increasing number of Render Nodes - currently: " + QString::number(numRenderNodes);
+            serverMsgLogger(msg);
         }
         myTaskHandler.popCpuQueue();
         listClientIpCPU.dequeue();
@@ -935,7 +1001,7 @@ void Dialog::theJobHub(){ //work in progress
         tempFile.close();
 
         Task_Server taskInstance;              //create a one frame task
-        taskInstance.initTask(myTaskHandler.getGpuFirst().stcFileName, myTaskHandler.getGpuFirst().stcStart, myTaskHandler.getGpuFirst().stcTotalFrames, myTaskHandler.getGpuFirst().stcRender, myTaskHandler.getGpuFirst().stcCPU, myTaskHandler.getGpuFirst().stcStereo3D,line, myTaskHandler.getGpuFirst().jobId, listClientIpGPU.first().cached);
+        taskInstance.initTask(myTaskHandler.getGpuFirst().stcFileName, myTaskHandler.getGpuFirst().stcStart, myTaskHandler.getGpuFirst().stcTotalFrames, myTaskHandler.getGpuFirst().stcRender, myTaskHandler.getGpuFirst().stcCPU, myTaskHandler.getGpuFirst().stcStereo3D,line, myTaskHandler.getGpuFirst().jobId, listClientIpGPU.first().cached, this->PayloadSize);
 
         connect(&taskInstance, SIGNAL(sendProgress(int)),ui->pb_sendFile, SLOT(setValue(int)));
         connect(&taskInstance,SIGNAL(sendJobSent(QString)), this ,SLOT (getConnectionFeedback(QString)),Qt::QueuedConnection);
@@ -945,6 +1011,8 @@ void Dialog::theJobHub(){ //work in progress
         {
               taskInstance.sendTo(listClientIpGPU.first().IP,port);
               numRenderNodes++;
+              QString msg= "Increasing number of Render Nodes - currently: " + QString::number(numRenderNodes);
+              serverMsgLogger(msg);
         }
 
         myTaskHandler.popGpuQueue();
@@ -959,13 +1027,17 @@ void Dialog::theJobHub(){ //work in progress
     ui->listWidget_gpu->clear();
     for(int i= 0; i<listClientIpCPU.count(); i++)
     {
-    ui->listWidget_cpu->addItem( createRenderNodeEntry(listClientIpCPU.at(i)) );
-    ui->txtConsole->appendPlainText( QString::number(i+1) + ". CPU Times: last=" + QString::number(listClientIpCPU.at(i).timeLast) + ", start=" + QString::number(listClientIpCPU.at(i).timeStart) );
+        ui->listWidget_cpu->addItem( createRenderNodeEntry(listClientIpCPU.at(i)) );
+        ui->txtConsole->appendPlainText( QString::number(i+1) + ". CPU Times: last=" + QString::number(listClientIpCPU.at(i).timeLast) + ", start=" + QString::number(listClientIpCPU.at(i).timeStart) );
     }
     for(int i= 0; i<listClientIpGPU.count(); i++)
     {
-    ui->listWidget_gpu->addItem( createRenderNodeEntry(listClientIpGPU.at(i)) );
-    ui->txtConsole->appendPlainText( QString::number(i+1) + ". GPU Times: last=" + QString::number(listClientIpCPU.at(i).timeLast) + ", start=" + QString::number(listClientIpCPU.at(i).timeStart) );
+        ui->listWidget_gpu->addItem( createRenderNodeEntry(listClientIpGPU.at(i)) );
+        ui->txtConsole->appendPlainText( QString::number(i+1) + ". GPU Times: last=" + QString::number(listClientIpCPU.at(i).timeLast) + ", start=" + QString::number(listClientIpCPU.at(i).timeStart) );
+    }
+    for(int i= 0; i<listClientIPBusy.count(); i++)
+    {
+        ui->listWidget_cpu->addItem( createRenderNodeEntry(listClientIPBusy.at(i)) );
     }
 
     //DO NOT DELETE -> WILL BREAK CONNECTION
@@ -976,6 +1048,7 @@ void Dialog::theJobHub(){ //work in progress
         ipCounter = 5;
         listClientIpCPU.clear();
         listClientIpGPU.clear();
+        listClientIPBusy.clear();
     }
 
     //need a check if a tas is taking too long an if it does, the function resendTask(internalTaskMap.key(QString)) is to be called
@@ -983,11 +1056,6 @@ void Dialog::theJobHub(){ //work in progress
         QStringList tempGetId = internalTaskMap.begin().key().split('#');
         if((QDateTime::currentMSecsSinceEpoch() - tempGetId.first().toULong())> (longestWaitingTime * 2)){ //changed from 20 to 2 by Domi
             resendTask(internalTaskMap.begin().key());
-
-
-
-
-
 
             //ui->txtConsole->appendPlainText("Task successfully requeued: "+internalTaskMap.begin().key() + "old key");
         }
@@ -1053,7 +1121,9 @@ void Dialog::getConnectionFeedback(QString feedbackCn)
     //taskId +"%"+filePath+"@"+currentFrame+"@"+projekt frames +"@"+CPU+"@"+stereo3D+"@"+jobId+"@"+cleintIP
 
     QStringList tempStringlst = feedbackCn.split('%');
-    internalTaskMap.insert(tempStringlst.first(), tempStringlst.last() );
+    internalTaskMap.insert(tempStringlst.first(), tempStringlst.last() ); //KeyValuePair
+
+    serverMsgLogger("This is the transmission feedback: " + feedbackCn);
 
     emit taskSentSIGNAL(tempStringlst);
 }
@@ -1155,6 +1225,9 @@ void Dialog::onTCPConnectionClosed()
     Result newResult;
     in >> newResult; //DeSerialize
 
+    QString msg= "Got something (most likely a Result. Contains " + QString::number( sizeof(newResult) ) + " Bytes) from: " + tcpRenderedResultSocket->peerName() + " (" + tcpRenderedResultSocket->peerAddress().toString() + ":" + QString::number(tcpRenderedResultSocket->peerPort()) + ")";
+    serverMsgLogger(msg);
+
     qDebug() << "Dialog::onTCPConnectionClosed() => sizeof(newResult) = " << sizeof(newResult);
 
     checkResultID(newResult);
@@ -1165,7 +1238,7 @@ void Dialog::serverLoggerSLOT(QStringList loggerStrList)
     QStringList loggerParamsList = loggerStrList.last().split('@');
     //JobId,projectFileAddress,renderMethod,Stereo3D, ClientIP
     QString templogStr;
-    templogStr= "Task with taskId: "+loggerStrList.first()+" sent to: "  +loggerParamsList.last();
+    templogStr= "Task with taskId: "+loggerStrList.first()+" sent to: "  +loggerParamsList.last() + " at Timestamp : #" + QString::number( QDateTime::currentMSecsSinceEpoch() );
     serverMsgLogger(templogStr);
 }
 
@@ -1204,10 +1277,15 @@ void Dialog::checkResultID(Result &result)
         QString msg= "Saving file with TaskID: " + result.taskId;
         serverMsgLogger(msg);
     } else {
-        QString msg= "Error! Incomming file with unknown TaskID: " + result.taskId;
+        QString msg= "Error! Incoming file with unknown TaskID: " + result.taskId;
         serverMsgLogger(msg);
         result.~Result();
     }
+
+    numRenderNodes--;
+    QString msg= "Decreasing number of Render Nodes - currently: " + QString::number(numRenderNodes);
+    serverMsgLogger(msg);
+    emit setRenderNodes(numRenderNodes);
 }
 
 void Dialog::saveResultOnHarddisk(Result &result)
@@ -1291,9 +1369,6 @@ void Dialog::saveResultOnHarddisk(Result &result)
     emit setFramesRendered(QString::number(framesRendered));
     emit setFramesTotal(QString::number(framesTotal));
 
-    numRenderNodes--;
-    emit setRenderNodes(numRenderNodes);
-
     checkResultComplete(result);
 }
 
@@ -1340,7 +1415,9 @@ void Dialog::serverMsgLogger(QString msg)
     QFile fileServerLog("assets/out.txt");
     fileServerLog.open(QIODevice::ReadWrite | QIODevice::Append| QIODevice::Text);
     QTextStream outLogger(&fileServerLog);
-    outLogger << msg  +"\n";
+    outLogger << QDateTime::currentDateTime().toString("d.M.yyyy hh:mm:ss > ") << msg  +"\n";
+    qDebug() << "Dialog::serverMsgLogger(QString msg) -> MSG CONTAINS: " << msg;
+
     fileServerLog.close();
 }
 

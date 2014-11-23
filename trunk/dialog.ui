@@ -339,7 +339,7 @@
                        </font>
                       </property>
                       <property name="maximum">
-                       <number>5000</number>
+                       <number>1000000</number>
                       </property>
                      </widget>
                     </item>
@@ -354,7 +354,7 @@
                        </font>
                       </property>
                       <property name="maximum">
-                       <number>5000</number>
+                       <number>10000000</number>
                       </property>
                       <property name="value">
                        <number>0</number>
@@ -566,9 +566,53 @@
                 <item>
                  <layout class="QVBoxLayout" name="testLayout">
                   <item>
-                   <widget class="QLabel" name="label_2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_8">
+                    <item>
+                     <widget class="QLabel" name="label_2">
+                      <property name="text">
+                       <string>Options :</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_7">
                     <property name="text">
-                     <string>Additional output Options</string>
+                     <string>UDP-Timer (ms)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="sb_udp">
+                    <property name="minimum">
+                     <number>1000</number>
+                    </property>
+                    <property name="maximum">
+                     <number>720000</number>
+                    </property>
+                    <property name="value">
+                     <number>2500</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_6">
+                    <property name="text">
+                     <string>PayloadSize (kB)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="sb_payloadsize">
+                    <property name="minimum">
+                     <number>64</number>
+                    </property>
+                    <property name="maximum">
+                     <number>10000000</number>
+                    </property>
+                    <property name="value">
+                     <number>1024</number>
                     </property>
                    </widget>
                   </item>
@@ -648,6 +692,20 @@
                    <widget class="QPushButton" name="btn_nuke">
                     <property name="text">
                      <string>kill blender on clients (only Linux)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>Save All</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_setOptions">
+                    <property name="text">
+                     <string>Set UDP-Timer and PayloadSize</string>
                     </property>
                    </widget>
                   </item>

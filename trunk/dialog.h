@@ -62,6 +62,7 @@ namespace RenderNode{
     public:
         QString IP;
         bool cached;
+        bool busy;
         bool online;
         Icon icon;
         qint64 timeStart; //Time since first message (added to queue)
@@ -69,6 +70,7 @@ namespace RenderNode{
 
         QString toString(){ return IP; }
         void setCached(bool _cached){ cached = _cached; }
+        void setBusy(bool _busy){ busy = _busy; }
         void setOnline(bool _online){ online = _online; }
     };
 
@@ -120,6 +122,7 @@ protected :
    // QQueue<taskStc> listStcGPU;
     QQueue<RenderNode::Node> listClientIpCPU;
     QQueue<RenderNode::Node> listClientIpGPU;
+    QQueue<RenderNode::Node> listClientIPBusy;
     QQueue<int>taskRenderTime;
     int taskRenderTimeQueueSize;
     int framesSentCounter;
@@ -188,6 +191,7 @@ private:
     //-----------------------------------------------------Client end
 
     ulong timVar;
+    int PayloadSize;
     ulong timerSec;
     int timerMin;
     void initIdleTimer();
@@ -223,9 +227,11 @@ public slots:
     void onTCPUpdateServerProgress();
     void onTCPConnectionClosed();
 
+
 private slots:
     void serverLoggerSLOT (QStringList loggerStrList);
     void onBtnClickedNuke();
+    void onSetOptions_btn();
 
     void render_btn_clicked();
     void spinboxStart(int startFrameChange);

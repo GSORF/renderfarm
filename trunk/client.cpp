@@ -52,7 +52,9 @@ Client::Client(QObject *parent) :
 
     //Variables for the Result-Transmission:
     this->totalResultBytes = 0;
+
     this->PayloadSize = 64; //64 * 1024; //64kb;
+    //qDebug() << "Client::onSendResultBack(Result result):begin => sizeof(result) = " << PayloadSize;
     this->bytesResultWritten = 0;
     this->bytesResultToWrite = 0;
 
