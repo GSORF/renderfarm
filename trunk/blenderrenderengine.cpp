@@ -121,7 +121,7 @@ void BlenderRenderEngine::renderTaskFile()
     //Now we can open the .blend in Blender:
 
     renderFilename = "awesomeRender_######";
-    QString command = blenderPath + " -b \""+ taskDirectory + "/" + taskFilename + "\" -o \"" + taskDirectory + "/" + renderFilename + "\" -F JPEG -x 1 -s " + QString::number(BlenderTask.startFrame) + " -e " + QString::number(BlenderTask.startFrame) + " -a";
+    QString command = blenderPath + " -b \""+ taskDirectory + "/" + taskFilename + "\" -o \"" + taskDirectory + "/" + renderFilename + "\" -F JPEG -x 1 -s " + QString::number(BlenderTask.startFrame) + " -e " + QString::number(BlenderTask.startFrame) + " -a -y";
 
     displayLogMessage("Command = " + command, false);
 
