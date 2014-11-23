@@ -31,6 +31,7 @@ Task_Client::Task_Client()
     startFrame = 0;
     endFrame = 0;
 
+
     renderEngine = "NONE";
     cpu = true;
     stereo3D = false;

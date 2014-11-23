@@ -34,9 +34,10 @@ class Task_Server : public QObject
 public:
     Task_Server();
     ~Task_Server();
-    void initTask(QString filename, int startframe, int endframe, QString RenderEngine, bool CPU, bool stereo3D, QByteArray &file, QString jobId, bool cached);
+    void initTask(QString filename, int startframe, int endframe, QString RenderEngine, bool CPU, bool stereo3D, QByteArray &file, QString jobId, bool cached, int payloadSize);
     void sendTo(QString host, unsigned int port);
     void selfTo(QString host);
+    int PayloadSize;
 
 private:
     qint16 currentFrame;      //short
@@ -55,7 +56,7 @@ private:
 
     QTcpSocket tcpClient;
     int TotalBytes;
-    int PayloadSize;
+
     int bytesToWrite;
     int bytesWritten;
     QByteArray customDataType;

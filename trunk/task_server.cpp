@@ -29,7 +29,7 @@ Task_Server::Task_Server(){}
 
 Task_Server::~Task_Server(){}
 
-void Task_Server::initTask(QString filePath, int startframe, int endframe, QString RenderEngine, bool CPU, bool stereo3D, QByteArray &file, QString jobId, bool cached)
+void Task_Server::initTask(QString filePath, int startframe, int endframe, QString RenderEngine, bool CPU, bool stereo3D, QByteArray &file, QString jobId, bool cached, int payloadSize)
 {
     this->filePath=filePath;
     QStringList fileAddress = filePath.split("/");
@@ -46,7 +46,7 @@ void Task_Server::initTask(QString filePath, int startframe, int endframe, QStri
 
 
     this->TotalBytes = 0;
-    this->PayloadSize = 64; //64 * 1024; //64kb;
+    this->PayloadSize = payloadSize;
     this->bytesWritten = 0;
     this->bytesToWrite = 0;
 
@@ -88,7 +88,6 @@ void Task_Server::sendTo(QString host, unsigned int port)
 
 
     this->feedback = this->taskId +"%"+this->filePath +"@"+QString::number(this->CPU)+"@"+QString::number(this->stereo3D)+"@"+jobId+"@"+host;
-    emit sendJobSent(this->feedback);
 
     tcpClient.connectToHost(host, port);
 
@@ -125,7 +124,12 @@ void Task_Server::updateClientProgress(qint64 numBytes)
 
     if(bytesWritten == TotalBytes)
     {
-        tcpClient.close();
+        //Quite hacky - wait for 2 seconds before closing connection:
+        tcpClient.disconnectFromHost();
+        if (tcpClient.state() == QAbstractSocket::UnconnectedState || tcpClient.waitForDisconnected(2000) )
+                qDebug("Disconnected!");
+
+        //tcpClient.close();
         emit sendProgress(100); // actualy we don't need it, just want to ensure there is no 99%-finish because of casting the variables
         emit sendJobSent(this->feedback);
     }
@@ -138,7 +142,7 @@ void Task_Server::displayError(QAbstractSocket::SocketError socketError)
         return;
     }
 
-        tcpClient.close();
+    tcpClient.close();
 
     this->feedback = "socket: NOT CONNECTED! " + tr("The following error occurred: %1.").arg(tcpClient.errorString());
     emit sendProgress(0);
